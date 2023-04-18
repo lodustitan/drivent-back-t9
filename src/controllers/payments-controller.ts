@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import httpStatus from 'http-status';
 import { requestError, unauthorizedError } from '@/errors';
 import { AuthenticatedRequest } from '@/middlewares';
-import paymentsService from '@/services/payment-service';
+import paymentsService from '@/services/payment-repository';
 
 export async function readPayments(req: AuthenticatedRequest, res: Response) {
   const { userId } = req;

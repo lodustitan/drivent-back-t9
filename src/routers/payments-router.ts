@@ -2,7 +2,7 @@ import { Router } from 'express';
 
 import { paymentPostSchema } from '@/schemas';
 import { authenticateToken, validateBody } from '@/middlewares';
-import { payPayment, readPayments } from '@/controllers/payments-controller';
+import { payPayment, readPayments } from '@/controllers';
 
 const paymentsRouter = Router();
 
