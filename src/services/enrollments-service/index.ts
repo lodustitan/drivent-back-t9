@@ -4,21 +4,26 @@ import { invalidDataError, notFoundError } from '@/errors';
 import addressRepository, { CreateAddressParams } from '@/repositories/address-repository';
 import enrollmentRepository, { CreateEnrollmentParams } from '@/repositories/enrollment-repository';
 import { exclude } from '@/utils/prisma-utils';
+import { AddressEnrollment } from '@/protocols';
 
-async function getAddressFromCEP(cep: string) {
-  const result = await request.get(`https://viacep.com.br/ws/${cep}/json/`);
+async function getAddressFromCEP(cep: string): Promise<AddressEnrollment> {
+  const result = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
 
-  if (!result.data) {
-    throw notFoundError();
-  } else {
-    return {
-      logradouro: result.data.logradouro,
-      complemento: result.data.complemento,
-      bairro: result.data.bairro,
-      cidade: result.data.localidade,
-      uf: result.data.uf,
-    };
+  if (!result.data || result.data.erro) {
+    throw notFoundError(); // lança um erro para quem chamou essa função!
   }
+
+  const { bairro, localidade, uf, complemento, logradouro } = result.data;
+
+  const address: AddressEnrollment = {
+    bairro,
+    cidade: localidade,
+    uf,
+    complemento,
+    logradouro,
+  };
+
+  return address;
 }
 
 async function getOneWithAddressByUserId(userId: number): Promise<GetOneWithAddressByUserIdResult> {
@@ -50,7 +55,6 @@ async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollm
   const address = getAddressForUpsert(params.address);
 
   try {
-    await verifyCEPValid(address.cep);
     await getAddressFromCEP(address.cep);
   } catch {
     throw invalidDataError(['invalid CEP']);
@@ -59,16 +63,6 @@ async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollm
   const newEnrollment = await enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, 'userId'));
 
   await addressRepository.upsert(newEnrollment.id, address, address);
-}
-
-async function verifyCEPValid(cep: string) {
-  const cepString = cep.replace('-', '');
-  const viacepTest = /^[0-9]{8}$/;
-  const { data } = await request.get(`https://viacep.com.br/ws/${cepString}/json/`);
-
-  if (!viacepTest.test(cepString) || data.erro) {
-    throw new Error();
-  }
 }
 
 function getAddressForUpsert(address: CreateAddressParams) {
