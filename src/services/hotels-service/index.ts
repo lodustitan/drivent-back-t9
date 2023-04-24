@@ -8,9 +8,10 @@ import { paymentRequired } from '@/errors/payment-error';
 
 async function verifyUserHavePaidTicket(userId: number) {
   const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
-  const ticket = await ticketsRepository.findTicketByEnrollmentId(enrollment.id);
+  if (!enrollment) throw notFoundError();
 
-  if (!ticket || !enrollment) throw notFoundError();
+  const ticket = await ticketsRepository.findTicketByEnrollmentId(enrollment.id);
+  if (!ticket) throw notFoundError();
 
   if (
     ticket.status === 'RESERVED' ||
