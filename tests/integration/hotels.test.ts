@@ -1,9 +1,9 @@
 import httpStatus from 'http-status';
 import supertest from 'supertest';
-import app, { init } from '@/app';
 
-import { prisma } from '@/config';
 import { TicketStatus } from '@prisma/client';
+import faker from '@faker-js/faker';
+import jwt from 'jsonwebtoken';
 import { cleanDb, generateValidToken } from '../helpers';
 import {
   createEnrollmentWithAddress,
@@ -14,8 +14,8 @@ import {
   generateCreditCardData,
 } from '../factories';
 import { createHotel, createHotelRoom } from '../factories/hotels-factory';
-import faker from '@faker-js/faker';
-import jwt from 'jsonwebtoken';
+import { prisma } from '@/config';
+import app, { init } from '@/app';
 
 beforeAll(async () => {
   await init();
@@ -129,7 +129,7 @@ describe('GET /hotels/:hotelId', () => {
       const ticketType = await createTicketType(false, true);
       const ticket = await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
       const hotel = await createHotel();
-      const response = await server.get('/hotels/' + 23).set('Authorization', `Bearer ${token}`);
+      const response = await server.get('/hotels/' + 8794856).set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toEqual(404);
     });
